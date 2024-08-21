@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XclusiveXM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+            color: #fff;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .music-player {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #444;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            filter: blur(8px);
+            transition: filter 0.3s ease;
+            cursor: pointer;
+        }
+
+        .music-player.unblurred {
+            filter: none;
+            cursor: default;
+        }
+
+        .title {
+            position: absolute;
+            top: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .artist {
+            position: absolute;
+            top: 40px;
+            width: 100%;
+            text-align: center;
+            font-size: 1em;
+            color: #bbb;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .play-button,
+        .skip-button {
+            font-size: 3em;
+            color: #fff;
+            background: none;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            margin: 10px;
+        }
+
+        .play-button:disabled,
+        .skip-button:disabled {
+            cursor: default;
+            color: #666;
+        }
+
+        .volume-control,
+        .progress-bar {
+            width: 80%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .volume-control input[type="range"],
+        .progress-bar input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .footer {
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>XclusiveXM</h1>
+        <div class="music-player" id="musicPlayer">
+            <div class="title" id="musicTitle">Music Title - Placeholder</div>
+            <div class="artist" id="musicArtist">Artist - Placeholder</div>
+            <div class="controls">
+                <button class="play-button" id="playButton" disabled>▶</button>
+                <button class="skip-button" id="skipButton" disabled>⏭️</button>
+            </div>
+            <div class="progress-bar">
+                <input type="range" id="progressBar" min="0" max="100" value="0">
+            </div>
+            <div class="footer">Track Progress</div>
+            <div class="volume-control">
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5" disabled>
+            </div>
+            <div class="footer">Volume</div>
+        </div>
+    </div>
+
+    <audio id="audioPlayer"></audio>
+
+    <script>
+        const musicPlayer = document.getElementById('musicPlayer');
+        const playButton = document.getElementById('playButton');
+        const skipButton = document.getElementById('skipButton');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const progressBar = document.getElementById('progressBar');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const musicTitle = document.getElementById('musicTitle');
+        const musicArtist = document.getElementById('musicArtist');
+
+        const tracks = [
+            { title: "Falling Down (Bonus Track)", artist: "Lil Peep & XXXTentacion", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/fallingdownbonustrack.mp3" },
+            { title: "Not Like Us", artist: "Landon Cube", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/notlikeus.mp3" },
+            { title: "THE SCOTTS", artist: "Travis Scott & Kid Cudi", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/thescotts.mp3" }
+        ];
+
+        let lastPlayedIndex = -1;
+
+        function loadRandomTrack() {
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * tracks.length);
+            } while (randomIndex === lastPlayedIndex);
+            lastPlayedIndex = randomIndex;
+            audioPlayer.src = tracks[randomIndex].src;
+            musicTitle.textContent = tracks[randomIndex].title;
+            musicArtist.textContent = tracks[randomIndex].artist;
+            audioPlayer.load();
+            progressBar.value = 0;
+        }
+
+        musicPlayer.addEventListener('click', function() {
+            if (!this.classList.contains('unblurred')) {
+                this.classList.add('unblurred');
+                playButton.disabled = false;
+                skipButton.disabled = false;
+                volumeSlider.disabled = false;
+                loadRandomTrack();
+                audioPlayer.play();
+                playButton.innerHTML = '❚❚'; // Change to pause icon
+            }
+        });
+
+        playButton.addEventListener('click', function() {
+            if (!this.disabled) {
+                if (audioPlayer.paused) {
+                    audioPlayer.muted = false;
+                    audioPlayer.play();
+                    playButton.innerHTML = '❚❚'; // Change to pause icon
+                } else {
+                    audioPlayer.muted = true;
+                    audioPlayer.pause(); // Pauses but keeps track muted
+                    playButton.innerHTML = '▶'; // Change to play icon
+                }
+            }
+        });
+
+        skipButton.addEventListener('click', function() {
+            if (!this.disabled) {
+                loadRandomTrack();
+                audioPlayer.play();
+                playButton.innerHTML = '❚❚'; // Ensure it's showing the pause icon
+            }
+        });
+
+        volumeSlider.addEventListener('input', function() {
+            audioPlayer.volume = this.value;
+        });
+
+        audioPlayer.addEventListener('timeupdate', function() {
+            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressBar.value = progress || 0;
+        });
+
+        audioPlayer.addEventListener('ended', function() {
+            loadRandomTrack();
+            audioPlayer.play();
+        });
+
+        progressBar.addEventListener('input', function() {
+            const seekTime = (progressBar.value / 100) * audioPlayer.duration;
+            audioPlayer.currentTime = seekTime;
+        });
+
+    </script>
+
+</body>
+</html>
