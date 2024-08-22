@@ -187,7 +187,6 @@
         ];
 
         let lastPlayedIndex = -1;
-        let playCount = 0;
         const intermissionTrack = {
             title: "XclusiveXM",
             artist: "The best On Demand unblocked music player!",
@@ -203,17 +202,18 @@
         }
 
         function loadRandomTrack() {
-            let randomIndex;
-            do {
-                randomIndex = Math.floor(Math.random() * tracks.length);
-            } while (randomIndex === lastPlayedIndex);
-            lastPlayedIndex = randomIndex;
-            loadTrack(tracks[randomIndex]);
-            playCount++;
+            // 1 in 5 chance to play intermission
+            const playIntermissionChance = Math.floor(Math.random() * 7) === 0;
 
-            if (playCount === 2) {
-                setTimeout(() => playIntermission(), 1000); 
-                playCount = 0;
+            if (playIntermissionChance) {
+                playIntermission();
+            } else {
+                let randomIndex;
+                do {
+                    randomIndex = Math.floor(Math.random() * tracks.length);
+                } while (randomIndex === lastPlayedIndex);
+                lastPlayedIndex = randomIndex;
+                loadTrack(tracks[randomIndex]);
             }
         }
 
@@ -243,49 +243,40 @@
                 skipButton.disabled = false;
                 volumeSlider.disabled = false;
                 loadRandomTrack();
-                audioPlayer.play();
-                playButton.innerHTML = '❚❚';
             }
         });
 
         playButton.addEventListener('click', function() {
             if (audioPlayer.paused) {
                 audioPlayer.play();
-                playButton.innerHTML = '❚❚';
+                playButton.textContent = '⏸';
             } else {
                 audioPlayer.pause();
-                playButton.innerHTML = '▶';
+                playButton.textContent = '▶';
             }
         });
 
         skipButton.addEventListener('click', function() {
-            audioPlayer.pause();
             loadRandomTrack();
             audioPlayer.play();
-            playButton.innerHTML = '❚❚';
+            playButton.textContent = '⏸';
         });
 
         audioPlayer.addEventListener('timeupdate', function() {
-            progressBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            const progressPercent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+            progressBar.value = progressPercent;
         });
 
         progressBar.addEventListener('input', function() {
-            audioPlayer.currentTime = (progressBar.value / 100) * audioPlayer.duration;
+            const seekTime = (progressBar.value / 100) * audioPlayer.duration;
+            audioPlayer.currentTime = seekTime;
         });
 
         volumeSlider.addEventListener('input', function() {
             audioPlayer.volume = volumeSlider.value;
         });
 
-        audioPlayer.onended = function() {
-            playButton.innerHTML = '▶';
-        };
-
-        window.onload = function() {
-            loadRandomTrack();
-            audioPlayer.play();
-            playButton.innerHTML = '❚❚';
-        };
     </script>
+
 </body>
 </html>
