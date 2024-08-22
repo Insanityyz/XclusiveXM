@@ -12,17 +12,11 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            background-color: #333;
             color: #fff;
         }
 
         .container {
             text-align: center;
-        }
-
-        h1 {
-            font-size: 2em;
-            margin-bottom: 20px;
         }
 
         .music-player {
@@ -46,12 +40,28 @@
             cursor: default;
         }
 
+        .tune-in-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #fff;
+            z-index: 1;
+        }
+
+        .music-player.unblurred .tune-in-text {
+            display: none;
+        }
+
         .title {
             position: absolute;
             top: 10px;
             width: 100%;
             text-align: center;
             font-size: 1.2em;
+            z-index: 2;
         }
 
         .artist {
@@ -61,23 +71,34 @@
             text-align: center;
             font-size: 1em;
             color: #bbb;
+            z-index: 2;
         }
 
         .controls {
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 2;
         }
 
         .play-button,
         .skip-button {
-            font-size: 3em;
-            color: #fff;
             background: none;
             border: none;
             cursor: pointer;
             outline: none;
             margin: 10px;
+        }
+
+        .play-button {
+            font-size: 3em;
+            color: #fff;
+        }
+
+        .skip-button svg {
+            width: 36px;
+            height: 36px;
+            fill: #fff;
         }
 
         .play-button:disabled,
@@ -93,6 +114,7 @@
             align-items: center;
             justify-content: center;
             margin-top: 10px;
+            z-index: 2;
         }
 
         .volume-control input[type="range"],
@@ -101,22 +123,32 @@
             cursor: pointer;
         }
 
+        .volume-control input[type="range"]:disabled,
+        .progress-bar input[type="range"]:disabled {
+            cursor: not-allowed;
+        }
+
         .footer {
             font-size: 0.8em;
             margin-top: 5px;
+            z-index: 2;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>XclusiveXM</h1>
         <div class="music-player" id="musicPlayer">
+            <div class="tune-in-text">Click to Tune In!</div>
             <div class="title" id="musicTitle">Music Title - Placeholder</div>
             <div class="artist" id="musicArtist">Artist - Placeholder</div>
             <div class="controls">
                 <button class="play-button" id="playButton" disabled>▶</button>
-                <button class="skip-button" id="skipButton" disabled>⏭️</button>
+                <button class="skip-button" id="skipButton" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="164px" height="164px">
+                        <path d="M16 12l-8-6v12zM17 6h2v12h-2z" fill="#fff"/>
+                    </svg>
+                </button>
             </div>
             <div class="progress-bar">
                 <input type="range" id="progressBar" min="0" max="100" value="0">
@@ -143,11 +175,32 @@
 
         const tracks = [
             { title: "Falling Down (Bonus Track)", artist: "Lil Peep & XXXTentacion", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/fallingdownbonustrack.mp3" },
-            { title: "Not Like Us", artist: "Landon Cube", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/notlikeus.mp3" },
+            { title: "Not Like Us", artist: "Kendrick Lamar", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/notlikeus.mp3" },
+            { title: "Romantic Homicide", artist: "d4vd", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/romantichomicide.mp3" },
+            { title: "Heartbreak Anniversery", artist: "Giveon", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/heartbreakanniversery.mp3" },
+            { title: "Tek it", artist: "Cafuné", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/tekit.mp3" },
+            { title: "You Know How We Do It", artist: "Ice Cube", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/youknowhowwedoit.mp3" },
+            { title: "Lady (Hear Me Tonight)", artist: "Modjo", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/ladyhearmetonight.mp3" },
+            { title: "Still D.R.E", artist: "Dr. Dre feat. Snoop Dogg", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/stilldre.mp3" },
+            { title: "1 Thing", artist: "Amerie", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/1thing.mp3" },
             { title: "THE SCOTTS", artist: "Travis Scott & Kid Cudi", src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/featured/thescotts.mp3" }
         ];
 
         let lastPlayedIndex = -1;
+        let playCount = 0;
+        const intermissionTrack = {
+            title: "XclusiveXM",
+            artist: "The best On Demand unblocked music player!",
+            src: "https://raw.githubusercontent.com/Insanityyz/XclusiveXM/main/music/xmrelated/intermission.mp3"
+        };
+
+        function loadTrack(track) {
+            audioPlayer.src = track.src;
+            musicTitle.textContent = track.title;
+            musicArtist.textContent = track.artist;
+            audioPlayer.load();
+            progressBar.value = 0;
+        }
 
         function loadRandomTrack() {
             let randomIndex;
@@ -155,11 +208,32 @@
                 randomIndex = Math.floor(Math.random() * tracks.length);
             } while (randomIndex === lastPlayedIndex);
             lastPlayedIndex = randomIndex;
-            audioPlayer.src = tracks[randomIndex].src;
-            musicTitle.textContent = tracks[randomIndex].title;
-            musicArtist.textContent = tracks[randomIndex].artist;
-            audioPlayer.load();
-            progressBar.value = 0;
+            loadTrack(tracks[randomIndex]);
+            playCount++;
+
+            if (playCount === 2) {
+                setTimeout(() => playIntermission(), 1000); 
+                playCount = 0;
+            }
+        }
+
+        function playIntermission() {
+            loadTrack(intermissionTrack);
+            playButton.disabled = true;
+            skipButton.disabled = true;
+            volumeSlider.disabled = true;
+            progressBar.disabled = true;
+
+            audioPlayer.play();
+
+            audioPlayer.onended = function() {
+                playButton.disabled = false;
+                skipButton.disabled = false;
+                volumeSlider.disabled = false;
+                progressBar.disabled = false;
+                loadRandomTrack();
+                audioPlayer.play();
+            };
         }
 
         musicPlayer.addEventListener('click', function() {
@@ -170,52 +244,48 @@
                 volumeSlider.disabled = false;
                 loadRandomTrack();
                 audioPlayer.play();
-                playButton.innerHTML = '❚❚'; // Change to pause icon
+                playButton.innerHTML = '❚❚';
             }
         });
 
         playButton.addEventListener('click', function() {
-            if (!this.disabled) {
-                if (audioPlayer.paused) {
-                    audioPlayer.muted = false;
-                    audioPlayer.play();
-                    playButton.innerHTML = '❚❚'; // Change to pause icon
-                } else {
-                    audioPlayer.muted = true;
-                    audioPlayer.pause(); // Pauses but keeps track muted
-                    playButton.innerHTML = '▶'; // Change to play icon
-                }
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                playButton.innerHTML = '❚❚';
+            } else {
+                audioPlayer.pause();
+                playButton.innerHTML = '▶';
             }
         });
 
         skipButton.addEventListener('click', function() {
-            if (!this.disabled) {
-                loadRandomTrack();
-                audioPlayer.play();
-                playButton.innerHTML = '❚❚'; // Ensure it's showing the pause icon
-            }
-        });
-
-        volumeSlider.addEventListener('input', function() {
-            audioPlayer.volume = this.value;
+            audioPlayer.pause();
+            loadRandomTrack();
+            audioPlayer.play();
+            playButton.innerHTML = '❚❚';
         });
 
         audioPlayer.addEventListener('timeupdate', function() {
-            const progress = (audioPlayer.currentTime / audioPlayer.duration) * 100;
-            progressBar.value = progress || 0;
-        });
-
-        audioPlayer.addEventListener('ended', function() {
-            loadRandomTrack();
-            audioPlayer.play();
+            progressBar.value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
         });
 
         progressBar.addEventListener('input', function() {
-            const seekTime = (progressBar.value / 100) * audioPlayer.duration;
-            audioPlayer.currentTime = seekTime;
+            audioPlayer.currentTime = (progressBar.value / 100) * audioPlayer.duration;
         });
 
-    </script>
+        volumeSlider.addEventListener('input', function() {
+            audioPlayer.volume = volumeSlider.value;
+        });
 
+        audioPlayer.onended = function() {
+            playButton.innerHTML = '▶';
+        };
+
+        window.onload = function() {
+            loadRandomTrack();
+            audioPlayer.play();
+            playButton.innerHTML = '❚❚';
+        };
+    </script>
 </body>
 </html>
